@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Catch Me Game</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      background-color: #87ceeb; /* Light Blue */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    #game-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    #catch-button {
+      position: absolute;
+      padding: 15px 25px;
+      font-size: 18px;
+      background-color: #ff69b4;
+      color: white;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: top 0.2s ease, left 0.2s ease;
+      z-index: 10;
+    }
+
+    #ui {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      font-size: 18px;
+      color: white;
+      background: rgba(0,0,0,0.3);
+      padding: 10px 15px;
+      border-radius: 10px;
+      z-index: 5;
+    }
+
+    #success-message {
+      display: none;
+      font-size: 2em;
+      color: #ffffff;
+      text-align: center;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    #hint {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 14px;
+      color: white;
+      background: rgba(0,0,0,0.4);
+      padding: 8px 12px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <div id="ui">
+      ⏱ Time: <span id="timer">30</span>s |
+      🎯 Score: <span id="score">0</span> |
+      🔼 Level: <span id="level">1</span> |
+      🏆 High Score: <span id="high-score">0</span>
+    </div>
+    <button id="catch-button">Catch Me 😜</button>
+    <div id="success-message">🎉 Time's up! Final Score: <span id="final-score">0</span></div>
+    <div id="hint">💡 Try moving your mouse or tapping fast to catch the button!</div>
+  </div>
+
+  <script>
+    const button = document.getElementById("catch-button");
+    const container = document.getElementById("game-container");
+    const timerSpan = document.getElementById("timer");
+    const scoreSpan = document.getElementById("score");
+    const levelSpan = document.getElementById("level");
+    const highScoreSpan = document.getElementById("high-score");
+    const successMessage = document.getElementById("success-message");
+    const finalScore = document.getElementById("final-score");
+  
+    let score = 0;
+    let level = 1;
+    let timeLeft = 60;
+    let moveSpeed = 800; // ← moves every 0.2 sec
+    let gameRunning = true;
+  
+    let highScore = localStorage.getItem("catchGameHighScore") || 0;
+    highScoreSpan.textContent = highScore;
+  
+    function moveButtonRandomly() {
+      const containerWidth = container.clientWidth;
+      const containerHeight = container.clientHeight;
+      const btnWidth = button.offsetWidth;
+      const btnHeight = button.offsetHeight;
+  
+      const randomX = Math.floor(Math.random() * (containerWidth - btnWidth));
+      const randomY = Math.floor(Math.random() * (containerHeight - btnHeight));
+  
+      button.style.left = `${randomX}px`;
+      button.style.top = `${randomY}px`;
+    }
+  
+    function updateUI() {
+      timerSpan.textContent = timeLeft;
+      scoreSpan.textContent = score;
+      levelSpan.textContent = level;
+      highScoreSpan.textContent = highScore;
+    }
+  
+    function gameOver() {
+      gameRunning = false;
+      button.style.display = "none";
+      successMessage.style.display = "block";
+      finalScore.textContent = score;
+  
+      if (score > highScore) {
+        highScore = score;
+        localStorage.setItem("catchGameHighScore", score);
+        alert("🏆 New High Score!");
+      }
+    }
+  
+    function catchButton() {
+      if (!gameRunning) return;
+      score++;
+      if (score % 5 === 0) {
+        level++;
+        moveSpeed = Math.max(100, moveSpeed - 20); // increase speed per level
+        restartMover();
+      }
+      updateUI();
+    }
+  
+    // Add click + tap support
+    button.addEventListener("click", catchButton);
+    button.addEventListener("touchstart", catchButton);
+  
+    // Countdown timer
+    const countdown = setInterval(() => {
+      if (!gameRunning) return;
+      timeLeft--;
+      updateUI();
+      if (timeLeft <= 0) {
+        clearInterval(countdown);
+        clearInterval(mover);
+        gameOver();
+      }
+    }, 1000);
+  
+    // Move loop
+    let mover = setInterval(() => {
+      if (gameRunning) moveButtonRandomly();
+    }, moveSpeed);
+  
+    function restartMover() {
+      clearInterval(mover);
+      mover = setInterval(() => {
+        if (gameRunning) moveButtonRandomly();
+      }, moveSpeed);
+    }
+  
+    window.onload = () => {
+      moveButtonRandomly();
+      updateUI();
+    };
+  </script>
+  
+  
+</body>
+</html>
